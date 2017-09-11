@@ -1,0 +1,19 @@
+{
+  "name": "optimus",
+  "version": "0.0.1",
+  "description": "Track the moods of the employees on daily basis",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=0.10.25"
+  },
+  "author": "Optimus",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.0",
+    "express": "^4.15.4",
+    "mongodb": "^2.2.31"
+  }
+}
