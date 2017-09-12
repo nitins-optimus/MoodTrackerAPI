@@ -4,7 +4,6 @@ const MongoClient = require('mongodb').MongoClient;
 const app = express();
 
 const util = require('./util');
-console.log(util);
 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json());
@@ -23,24 +22,58 @@ app.get('/', (req, res) => {
   res.send('hello world')
 })
 
+app.post('/get-mood-bydate', (req, res) => {
+	var startDate = req.body.startDate;
+	var endDate = req.body.endDate;
+	var records = {"countH":0,"countS":0};
+	
+	if( new Date(startDate) > new Date(endDate)){
+		res.json(records);
+		return;
+	}
+	var query = {
+		date: {
+		    $gte:new Date(startDate),
+			  $lte:new Date(endDate)
+		}
+	};
+
+	console.log(startDate);
+	console.log(endDate);
+
+	
+	db.collection('mood').find(query).toArray((err, result) => {
+		console.log("the result is ", result);
+	
+		if(result && result.length) {
+			records = util.creatMoodList(result);
+		}
+		
+		res.json(records);
+	});
+
+});
+
+
 app.post('/add-mood', (req, res) => {
 
-	var date = req.body.date;
+	var date = new Date(req.body.date);
 	var countH = req.body.countH;
 	var countS = req.body.countS;
-	var isReqValid = util.checkParam(date, countH, countS);
+	var isReqValid = util.checkParam(req.body.date, countH, countS);
 
-	 db.collection('mood').find({"date":req.body.date}).toArray((err, result) => {
+	 db.collection('mood').find({"date":date}).toArray((err, result) => {
      if (err) return console.log(err)
 		 console.log("isReqValid", isReqValid);
 		if (isReqValid) {
 	     if(result && result.length) {
 			  
-				db.collection('mood').update({"date":req.body.date},{$set:{"countH":result[0].countH + countH}});
+				db.collection('mood').update({"date":date},{$set:{"countH":result[0].countH + countH}});
 									
-				db.collection('mood').update({"date":req.body.date},{$set:{"countS":result[0].countS + countS}});
+				db.collection('mood').update({"date":date},{$set:{"countS":result[0].countS + countS}});
 				} else  {	    
 					// New record
+					req.body.date = date;
 					db.collection('mood').insert(req.body);    
 				}
 			}	 		
