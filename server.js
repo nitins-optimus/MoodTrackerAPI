@@ -7,6 +7,7 @@ const util = require('./util');
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json());
+
 var ip = require('ip');
 var address = ip.address() // my ip address
 
@@ -22,13 +23,21 @@ MongoClient.connect(process.env.MONGOLAB_URI || MONGOLAB_URI, (err, database) =>
 	})
 })
 
+// To test API
 app.get('/', (req, res) => {
-	res.send('hello world')
+	res.send('Your are in Get request of Mood Tracker API and it working Fine');
 })
 
-app.post('/get-mood-bydate', (req, res) => {
-	var startDate = util.covertDate(req.body.startDate);
-	var endDate = util.covertDate(req.body.endDate);
+
+// To get the Happy Sad Count as per date.
+app.get('/get-mood-bydate', (req, res) => {
+	var startDate = util.covertDate(req.query.startDate);
+	var endDate = util.covertDate(req.query.endDate);
+
+	// move to end of day time
+	endDate.setHours(23);
+	endDate.setMinutes(59);
+	endDate.setSeconds(59);
 
 	var records = { "countH": 0, "countS": 0 };
 
@@ -56,6 +65,7 @@ app.post('/get-mood-bydate', (req, res) => {
 });
 
 
+// To Save the Happy Sad Count
 app.post('/add-mood', (req, res) => {
 
 	var dateParts = req.body.date.split("/");
@@ -91,5 +101,37 @@ app.post('/add-mood', (req, res) => {
 		"isReqValid": isReqValid,
 		"Params": req.body
 	});
-	//res.end();
+});
+
+
+
+
+// Post to calll for future purpose
+app.post('/get-mood-date', (req, res) => {
+	var startDate = util.covertDate(req.body.startDate);
+	var endDate = util.covertDate(req.body.endDate);
+
+	var records = { "countH": 0, "countS": 0 };
+
+	if (startDate > endDate) {
+		res.json(records);
+		return;
+	}
+	var query = {
+		date: {
+			$gte: startDate,
+			$lte: endDate
+		}
+	};
+
+	db.collection('mood').find(query).toArray((err, result) => {
+		console.log("the result is ", result);
+
+		if (result && result.length) {
+			records = util.creatMoodList(result);
+		}
+
+		res.json(records);
+	});
+
 });
