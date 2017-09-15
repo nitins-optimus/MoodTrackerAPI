@@ -104,6 +104,13 @@ app.post('/add-mood', (req, res) => {
 });
 
 
+// Request to return all data
+app.get('/get-all-data', (req, res) => {
+	db.collection('mood').find({}, {'_id': false}).toArray((err, result) => {
+		res.json(result);
+	})
+});
+
 
 
 // Post to calll for future purpose
